@@ -12,8 +12,8 @@ class Supermarket {
 	private int K; // the number of items that Steven has to buy
 	private int[] shoppingList; // indices of items that Steven has to buy
 	private int[][] T; // the complete weighted graph that measures the direct walking time to go from one point to another point in seconds
-	private int[][] memo;
-	private int[][] list;
+	private int[][] memo, list, apsp;
+	private int[] dist;
 
 	// if needed, declare a private data structure here that
 	// is accessible to all methods in this class
@@ -39,8 +39,9 @@ class Supermarket {
 		// then, reaches the cashier of the supermarket (back to vertex 0).
 		//
 		// write your answer here
-		floydWarshall(T);
-		getListGraph();
+		//floydWarshall(T);
+		dijkstraAPSP();
+		getListGraph(apsp);
 		init();
 		//displayListGraph();
 		ans = TSP(0, 1);
@@ -66,7 +67,7 @@ class Supermarket {
 		}
 	}
 	
-	private void getListGraph() {
+	private void getListGraph(int[][] T) {
 		list = new int[K+1][K+1];
 		
 		// Handle index 0 separately
@@ -133,6 +134,80 @@ class Supermarket {
 		return memo[u][m];
 	}
 	
+	// ======================================================================
+	// For subtask C only
+	// ======================================================================
+	
+	private void initSSSP(int source) {
+		dist = new int[N+1];
+    	for (int i = 0; i < N + 1; i++) {
+    		dist[i] = Integer.MAX_VALUE;
+    	}
+    	dist[source] = 0;
+    }
+    
+	private void dijkstra(int[][] graph, int source) {
+		PriorityQueue<IntegerPair> pq = new PriorityQueue<IntegerPair>();
+		initSSSP(source);
+		pq.offer(new IntegerPair(0, source));
+		while (!pq.isEmpty()) {
+			IntegerPair temp = pq.poll();
+			int d = temp.first();
+			int u = temp.second();
+			if (d == dist[u]) {
+				for (int i = 0; i < graph[u].length; i++) {
+					int v = i;
+					int weight = graph[u][i];
+					if (dist[v] > dist[u] + weight) {
+						dist[v] = dist[u] + weight;
+						pq.offer(new IntegerPair(dist[v], v));
+					}
+				}
+			}
+		}
+	}
+
+	private void dijkstraAPSP() {
+		apsp = new int[T.length][T.length];
+		for (int i = 0; i < T.length; i++) {
+			if (existsInList(i)) {
+				dijkstra(T, i);
+				for (int j = 0; j < T.length; j++) {
+					apsp[i][j] = dist[j];
+				}
+			} else {
+				for (int j = 0; j < T.length; j++) {
+					apsp[i][j] = T[i][j];
+				}
+			}
+		}
+	}
+	
+    private void dijkstra(Vector<Vector<IntegerPair>> adjList, int source) {
+    	
+    	// Initialize the PQ used for dijkstra
+    	PriorityQueue<IntegerPair> pq = new PriorityQueue<IntegerPair>();
+    	
+    	initSSSP(source);
+    	
+    	pq.offer(new IntegerPair(0, source));
+    	while (!pq.isEmpty()) {
+    		IntegerPair temp = pq.poll();
+    		int d = temp.first();
+    		int u = temp.second();
+    		if (d == dist[u]) {
+    			for (int i = 0; i < adjList.get(u).size(); i++) {
+					int v = adjList.get(u).get(i).second();
+					int weight = adjList.get(u).get(i).first();
+    				if (dist[v] > dist[u] + weight) {
+    					dist[v] = dist[u] + weight;
+    					pq.offer(new IntegerPair(dist[v], v));
+    				}
+    			}
+    		}
+    	}
+    }
+    
 	private void displayMemo() {
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < memo[i].length; j++) {
@@ -224,4 +299,23 @@ class IntegerScanner { // coded by Ian Leow, using any other I/O method is not r
 			return -1;
 		}
 	}
+}
+
+class IntegerPair implements Comparable<IntegerPair> {
+	Integer _first, _second;
+
+	public IntegerPair(Integer f, Integer s) {
+		_first = f;
+		_second = s;
+	}
+
+	public int compareTo(IntegerPair o) {
+		if (!this.first().equals(o.first()))
+			return this.first() - o.first();
+		else
+			return this.second() - o.second();
+	}
+
+	Integer first() { return _first; }
+	Integer second() { return _second; }
 }
