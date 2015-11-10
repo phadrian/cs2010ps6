@@ -39,10 +39,10 @@ class Supermarket {
 		// then, reaches the cashier of the supermarket (back to vertex 0).
 		//
 		// write your answer here
+		floydWarshall(T);
 		getListGraph();
 		init();
 		//displayListGraph();
-		floydWarshall(list);
 		ans = TSP(0, 1);
 		//displayMemo();
 
@@ -92,9 +92,9 @@ class Supermarket {
 	}
 	
 	private void floydWarshall(int[][] graph) {
-		for (int k = 0; k < K; k++) {
-			for (int i = 0; i < K; i++) {
-				for (int j = 0; j < K; j++) {
+		for (int k = 0; k < graph.length; k++) {
+			for (int i = 0; i < graph.length; i++) {
+				for (int j = 0; j < graph.length; j++) {
 					graph[i][j] = Math.min(
 							graph[i][j], 
 							graph[i][k] + graph[k][j]);
