@@ -13,6 +13,7 @@ class Supermarket {
 	private int[] shoppingList; // indices of items that Steven has to buy
 	private int[][] T; // the complete weighted graph that measures the direct walking time to go from one point to another point in seconds
 	private int[][] memo;
+	private int[][] list;
 
 	// if needed, declare a private data structure here that
 	// is accessible to all methods in this class
@@ -38,7 +39,10 @@ class Supermarket {
 		// then, reaches the cashier of the supermarket (back to vertex 0).
 		//
 		// write your answer here
+		getListGraph();
 		init();
+		//displayListGraph();
+		floydWarshall(list);
 		ans = TSP(0, 1);
 		//displayMemo();
 
@@ -47,18 +51,70 @@ class Supermarket {
 
 	// You can add extra function if needed
 	// --------------------------------------------
+	private boolean existsInList(int item) {
+		if (item == 0) {
+			return true;
+		} else {
+			boolean found = false;
+			for (int i = 0; i < shoppingList.length; i++) {
+				if (shoppingList[i] == item) {
+					found = true;
+					break;
+				}
+			}
+			return found;
+		}
+	}
+	
+	private void getListGraph() {
+		list = new int[K+1][K+1];
+		
+		// Handle index 0 separately
+		int x = 0;
+		for (int i = 0; i < T[0].length; i++) {
+			if (existsInList(i)) {
+				list[0][x] = T[0][i];
+				x++;
+			}
+		}
+		
+		x = 1;
+		for (int i = 0; i < shoppingList.length; i++) {
+			int y = 0;
+			for (int j = 0; j < T[shoppingList[i]].length; j++) {
+				if (existsInList(j)) {
+					list[x][y] = T[shoppingList[i]][j];
+					y++;
+				}
+			}
+			x++;
+		}
+	}
+	
+	private void floydWarshall(int[][] graph) {
+		for (int k = 0; k < K; k++) {
+			for (int i = 0; i < K; i++) {
+				for (int j = 0; j < K; j++) {
+					graph[i][j] = Math.min(
+							graph[i][j], 
+							graph[i][k] + graph[k][j]);
+				}
+			}
+		}
+	}
+	
 	private void init() {
-		N++;
-		memo = new int[N][1 << N];
-		for (int i = 0; i < N; i++) {
+		K++;
+		memo = new int[K][1 << K];
+		for (int i = 0; i < K; i++) {
 			Arrays.fill(memo[i], -1);
 		}
 	}
 	
 	private int TSP(int u, int m) {
 		// If all vertices have been visited
-		if (m == (1 << N) - 1) {
-			return T[u][0];
+		if (m == (1 << K) - 1) {
+			return list[u][0];
 		}
 		// If the value has been computed before
 		if (memo[u][m] != -1) {
@@ -67,11 +123,11 @@ class Supermarket {
 		
 		// General case
 		memo[u][m] = Integer.MAX_VALUE;
-		for (int v = 0; v < N; v++) {
+		for (int v = 0; v < K; v++) {
 			if (((1 << v) & m) == 0) {
 				memo[u][m] = Math.min(
 						memo[u][m], 
-						T[u][v] + TSP(v, (1 << v) | m));
+						list[u][v] + TSP(v, (1 << v) | m));
 			}
 		}
 		return memo[u][m];
@@ -81,6 +137,16 @@ class Supermarket {
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < memo[i].length; j++) {
 				System.out.print(memo[i][j] + " ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+	
+	private void displayListGraph() {
+		for (int i = 0; i < list.length; i++) {
+			for (int j = 0; j < list[i].length; j++) {
+				System.out.print(list[i][j] + " ");
 			}
 			System.out.println();
 		}
